@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { SCRIPTS } from '../data/characters'
 import { deleteNotebook, listNotebooks, newNotebook, uid } from '../notes/model'
 import { useNotebook } from '../notes/useNotebook'
@@ -9,6 +10,11 @@ import { Button, Card, Empty, Footer, Page } from './kit'
 /** #/notes — list of notebooks on this phone; #/notes/<id> — one notebook. */
 export default function NotesHome({ id }: { id?: string }) {
   if (id) return <NotebookPage id={id} />
+  return <NotesList />
+}
+
+function NotesList() {
+  const [, bump] = useState(0)
   const books = listNotebooks()
   return (
     <Page title="Notetaking" back="/">
@@ -24,7 +30,7 @@ export default function NotesHome({ id }: { id?: string }) {
                 <div className="display truncate text-lg">{b.title || SCRIPTS[b.script].name}</div>
                 <div className="text-sm text-dim">{SCRIPTS[b.script].name} · {b.players.length} players · {new Date(b.updatedAt).toLocaleString()}</div>
               </button>
-              <Button variant="danger" onClick={() => { if (confirm('Delete this notebook?')) { deleteNotebook(b.id); navigate('/notes', true); window.dispatchEvent(new HashChangeEvent('hashchange')) } }}>Delete</Button>
+              <Button variant="danger" onClick={() => { if (confirm('Delete this notebook?')) { deleteNotebook(b.id); bump((n) => n + 1) } }}>Delete</Button>
             </Card>
           ))}
         </div>
