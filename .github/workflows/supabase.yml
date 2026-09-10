@@ -12,6 +12,8 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    # Protected environment: the owner must approve each run before the token is exposed to it.
+    environment: supabase
     steps:
       - uses: actions/checkout@v4
       - run: scripts/migrate.sh
