@@ -58,7 +58,11 @@ Other commands: `npm test` (game-logic tests), `npm run typecheck`, `npm run bui
 
 Realtime uses Supabase **Broadcast** channels (on by default), so no table replication needs enabling.
 
-Schema changes after the initial setup live in `supabase/migrations/`; run any that are newer than your project in the SQL editor.
+Schema changes after the initial setup live in `supabase/migrations/`. They are applied automatically:
+the **Supabase schema** workflow runs `scripts/migrate.sh` on every push that touches `supabase/`, and weekly
+(which also keeps the free-tier project from being paused). It needs the repo secret `SUPABASE_ACCESS_TOKEN`
+(a personal access token from https://supabase.com/dashboard/account/tokens) and the variable `SUPABASE_PROJECT_REF`.
+To apply by hand instead: paste the files into the SQL editor, or run the script locally with those two variables set.
 
 ### How the data is protected
 
