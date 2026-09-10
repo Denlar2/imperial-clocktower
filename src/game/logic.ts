@@ -14,8 +14,8 @@ export function resetPlayer(p: Player): Player {
   return { ...blankPlayer(p.id, p.name), role: p.role, fakeAs: p.fakeAs, evil: p.evil }
 }
 
-export function newGame(code: string, script: ScriptId, count: number): Game {
-  return { v: 1, code, script, count, status: 'lobby', phase: 0, done: {}, players: [], votes: [], createdAt: Date.now() }
+export function newGame(code: string, script: ScriptId, count: number, mode: 'phones' | 'single' = 'phones'): Game {
+  return { v: 1, code, mode, script, count, status: 'lobby', phase: 0, done: {}, players: [], votes: [], createdAt: Date.now() }
 }
 
 export const roleEvil = (S: Script, role: string | null) => {

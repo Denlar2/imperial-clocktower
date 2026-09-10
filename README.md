@@ -13,16 +13,24 @@ Scripts: Trouble Brewing, Bad Moon Rising, Unholier Than Thou (custom, with Djin
 
 ## How a game works
 
-1. Storyteller taps **Run a game**, picks a script and player count, gets a 2-digit code.
-2. Players tap **Join a game**, enter the code and their name. The lobby fills up live.
-3. Storyteller drags seats to match the circle, taps **Deal roles** (or picks roles per player), then **Start game**.
-4. Every player gets a full-screen role token on their phone: tap to reveal, tap to hide.
-5. Storyteller runs the game from the **Grimoire** (alive/dead, marks, reminders), the **Night** order
-   (filtered to characters in play, with target pickers that move marks), and the **Vote** helper.
-6. Players see day/night, whether they are alive, their ghost vote, and can peek at their role
-   or open the character sheet at any time.
+The Storyteller taps **Run a game**, picks a script and player count, then chooses one of two modes:
 
-Games expire after 12 hours. The Storyteller can refresh or close the browser and resume from the home screen.
+**Players join with their phones**
+1. The Storyteller gets a 2-digit code. Players tap **Join a game**, enter the code and their name. The lobby fills up live.
+2. Storyteller drags seats to match the circle, taps **Deal roles** (or picks roles per player), then **Start game**.
+3. Every player gets a full-screen role token on their phone: tap to reveal, tap to hide.
+   The role is only available until the Storyteller begins the first night — remember it, like handing back a token.
+4. After that a player's phone shows day/night, whether they are alive, their ghost vote, private **notes**
+   per player (stored only on their phone), and the character sheet. Nobody else's role is ever sent to a player.
+
+**Single phone, pass it around** (no internet needed)
+1. Type in the players' names in seat order, deal roles.
+2. The **Reveal** tab lists the players: hand the phone around, each taps their name, reads, taps to hide.
+
+In both modes the Storyteller runs the game from the **Grimoire** (alive/dead, marks, reminders), the **Night**
+order (filtered to characters in play, with target pickers that move marks), and the **Vote** helper.
+
+Phone games expire after 12 hours. The Storyteller can refresh or close the browser and resume from the home screen.
 
 ## Run locally
 
@@ -49,6 +57,8 @@ Other commands: `npm test` (game-logic tests), `npm run typecheck`, `npm run bui
      add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then re-run the deploy workflow.
 
 Realtime uses Supabase **Broadcast** channels (on by default), so no table replication needs enabling.
+
+Schema changes after the initial setup live in `supabase/migrations/`; run any that are newer than your project in the SQL editor.
 
 ### How the data is protected
 

@@ -59,7 +59,8 @@ begin
   return t;
 end $$;
 
--- Player: what this player is allowed to see.
+-- Player: what this player is allowed to see. The role is only sent between "Start game" and the
+-- first night (phase 0); after that players must remember it, like handing back a token.
 create or replace function public.player_view(p_code text, p_id text)
 returns jsonb language sql security definer stable set search_path = public as $$
   select jsonb_build_object(
@@ -73,7 +74,7 @@ returns jsonb language sql security definer stable set search_path = public as $
           from jsonb_array_elements(g.state->'players') with ordinality as t(e, o)), '[]'::jsonb),
     'me', (
         select jsonb_build_object('id', e->'id', 'name', e->'name', 'dead', e->'dead', 'executed', e->'executed', 'ghost', e->'ghost',
-                                  'reveal', case when g.state->>'status' = 'playing' then e->'reveal' else null end)
+                                  'reveal', case when g.state->>'status' = 'playing' and (g.state->>'phase')::int = 0 then e->'reveal' else null end)
           from jsonb_array_elements(g.state->'players') e
          where e->>'id' = p_id limit 1)
   )

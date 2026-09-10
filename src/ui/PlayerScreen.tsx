@@ -4,6 +4,7 @@ import { phaseName } from '../game/logic'
 import { PLAYER_KEY, deviceId, getLocal, setLocal, type Remembered } from '../lib/device'
 import { navigate } from '../lib/router'
 import { usePlayerView } from '../lib/usePlayerView'
+import Notes from './Notes'
 import RoleReveal from './RoleReveal'
 import { Banner, Button, Card, Empty, Footer, Page, cx } from './kit'
 
@@ -59,6 +60,7 @@ export default function PlayerScreen({ code }: { code: string }) {
   }
 
   const alive = !me.dead
+  const before = view.status === 'playing' && view.phase === 0
   return (
     <Page title={S?.name ?? 'Clocktower'} right={<span className="text-sm text-dim">code {code}</span>}>
       {error && <Banner>{error}</Banner>}
@@ -69,29 +71,38 @@ export default function PlayerScreen({ code }: { code: string }) {
             <div className="mt-1 text-dim">You're in as <b className="text-wax">{me.name}</b>.</div>
           </Card>
           <Button variant="ghost" className="mt-2 w-full" onClick={() => navigate(`/join/${code}`)}>Change name</Button>
+          <h2 className="mt-8 mb-2 text-xl text-candle">Players</h2>
+          <ol className="flex flex-col gap-1">
+            {view.players.map((p, i) => (
+              <li key={p.id} className="flex items-center gap-2 rounded-xl border border-line px-3 py-2">
+                <span className="w-6 text-right text-dim">{i + 1}</span>
+                <span className={cx('flex-1', p.id === id && 'text-candle')}>{p.name}</span>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : before ? (
+        <>
+          <Card className="text-center">
+            <div className="display text-2xl">Learn your role</div>
+            <div className="mt-1 text-sm text-dim">You can only see it until the Storyteller begins the first night. Remember it!</div>
+          </Card>
+          <Button big variant="primary" className="mt-3 w-full" onClick={() => { setShowRole(false); setFullscreen(true) }}>
+            Show my role
+          </Button>
         </>
       ) : (
         <>
-          <div className="display mb-3 text-center text-3xl text-candle">{phaseName(view.phase)}</div>
-          <Card className={cx('text-center', !alive && 'border-evil/60')}>
-            <div className="display text-3xl">{alive ? 'Alive' : 'Dead'}</div>
-            {!alive && <div className="mt-1 text-dim">{me.ghost ? 'Ghost vote available' : 'Ghost vote used'}</div>}
-          </Card>
-          <Button big variant="primary" className="mt-3 w-full" onClick={() => { setShowRole(false); setFullscreen(true) }}>
-            Peek at your role
-          </Button>
+          <div className="flex items-center justify-between">
+            <div className="display text-3xl text-candle">{phaseName(view.phase)}</div>
+            <div className={cx('display text-2xl', alive ? 'text-wax' : 'text-evil')}>
+              <span>{alive ? 'Alive' : 'Dead'}</span>
+              {!alive && <span className="ml-2 text-sm text-dim">{me.ghost ? '👻 vote left' : 'no vote left'}</span>}
+            </div>
+          </div>
+          <Notes view={view} myId={id} />
         </>
       )}
-      <h2 className="mt-8 mb-2 text-xl text-candle">Players</h2>
-      <ol className="flex flex-col gap-1">
-        {view.players.map((p, i) => (
-          <li key={p.id} className={cx('flex items-center gap-2 rounded-xl border border-line px-3 py-2', p.dead && 'opacity-50')}>
-            <span className="w-6 text-right text-dim">{i + 1}</span>
-            <span className={cx('flex-1', p.id === id && 'text-candle')}>{p.name}</span>
-            {p.dead && <span className="text-xs text-evil">dead{p.ghost ? ' · 👻' : ''}</span>}
-          </li>
-        ))}
-      </ol>
       <Button className="mt-6 w-full" onClick={() => navigate(`/sheet/${view.script}`)}>Character sheet</Button>
       <Button variant="ghost" className="mt-2 w-full" onClick={() => void refresh()}>Refresh</Button>
       <Footer />

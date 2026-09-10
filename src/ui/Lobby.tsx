@@ -3,6 +3,7 @@ import { COMP, TYPES, charsOfType, getChar, type Script } from '../data/characte
 import { assignFakes, dealRoles, isEvil, moveSeat, pickBountyHunterTarget, resetPlayer, withReveals } from '../game/logic'
 import type { Game } from '../game/types'
 import { absoluteUrl, navigate } from '../lib/router'
+import { blankPlayer } from '../game/logic'
 import { Sortable } from './Sortable'
 import { Banner, Button, Card, Footer, Input, Page, Select, Toast, alignClass, copyText, cx, useToast } from './kit'
 
@@ -11,6 +12,8 @@ type Update = (fn: (g: Game) => Game) => void
 export default function Lobby({ game, S, update, error, saving }: { game: Game; S: Script; update: Update; error: string | null; saving: boolean }) {
   const [toast, say] = useToast()
   const [editing, setEditing] = useState<string | null>(null)
+  const [newName, setNewName] = useState('')
+  const solo = game.mode === 'single'
   const P = game.players
   const n = P.length
   const comp = COMP[n]
@@ -35,23 +38,39 @@ export default function Lobby({ game, S, update, error, saving }: { game: Game; 
 
   return (
     <Page
-      title="Lobby"
+      title={solo ? 'Players' : 'Lobby'}
       back="/"
       right={<span className="text-sm text-dim">{saving ? 'saving…' : S.name}</span>}
     >
       <Toast msg={toast} />
       {error && <Banner>{error}</Banner>}
-      <Card className="text-center">
-        <div className="text-dim">Players join with code</div>
-        <div className="display text-7xl tracking-[.15em] text-candle">{game.code}</div>
-        <Button variant="ghost" onClick={async () => say((await copyText(joinUrl)) ? 'Join link copied' : joinUrl)}>Copy join link</Button>
-      </Card>
+      {solo ? (
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const v = newName.trim()
+            if (!v || n >= 15) return
+            update((g) => ({ ...g, players: [...g.players, blankPlayer(crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), v)] }))
+            setNewName('')
+          }}
+        >
+          <Input placeholder={`Player ${n + 1} name`} value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={24} autoComplete="off" enterKeyHint="done" />
+          <Button type="submit" variant="primary" disabled={!newName.trim() || n >= 15}>Add</Button>
+        </form>
+      ) : (
+        <Card className="text-center">
+          <div className="text-dim">Players join with code</div>
+          <div className="display text-7xl tracking-[.15em] text-candle">{game.code}</div>
+          <Button variant="ghost" onClick={async () => say((await copyText(joinUrl)) ? 'Join link copied' : joinUrl)}>Copy join link</Button>
+        </Card>
+      )}
 
       <div className="mt-5 flex items-baseline justify-between">
         <h2 className="text-xl text-candle">Seats</h2>
-        <span className="text-sm text-dim">{n} of {game.count} joined · drag ⋮⋮ to match the circle</span>
+        <span className="text-sm text-dim">{n} of {game.count}{solo ? '' : ' joined'} · drag ⋮⋮ to match the circle</span>
       </div>
-      {n === 0 && <div className="py-6 text-center text-dim">Nobody yet. Players appear here as they join.</div>}
+      {n === 0 && <div className="py-6 text-center text-dim">{solo ? 'Add the players in seat order.' : 'Nobody yet. Players appear here as they join.'}</div>}
       <Sortable
         items={P}
         onMove={(from, to) => update((g) => ({ ...g, players: moveSeat(g.players, from, to) }))}
@@ -122,7 +141,7 @@ export default function Lobby({ game, S, update, error, saving }: { game: Game; 
           Start game
         </Button>
       </div>
-      <p className="mt-2 text-center text-sm text-dim">Deal random roles, or pick per player above. Starting locks roles and sends everyone their reveal.</p>
+      <p className="mt-2 text-center text-sm text-dim">Deal random roles, or pick per player above. {solo ? 'Then reveal roles from the Reveal tab by passing the phone around.' : 'Starting locks roles and sends everyone their reveal.'}</p>
       <Button variant="ghost" className="mt-4 w-full" onClick={() => navigate(`/sheet/${S.id}`)}>Character sheet</Button>
       <Footer />
     </Page>

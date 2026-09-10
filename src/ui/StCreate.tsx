@@ -3,7 +3,8 @@ import { COMP, MAX_PLAYERS, MIN_PLAYERS, SCRIPTS, SCRIPT_IDS, type ScriptId } fr
 import { newGame } from '../game/logic'
 import { ST_KEY, deviceId, setLocal } from '../lib/device'
 import { navigate } from '../lib/router'
-import { createGame } from '../lib/store'
+import { configured, createGame } from '../lib/store'
+import { startSoloGame } from '../lib/useSoloGame'
 import { Banner, Button, Card, Footer, Label, Page, cx } from './kit'
 
 export default function StCreate() {
@@ -12,6 +13,11 @@ export default function StCreate() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [t, o, m, d] = COMP[count]
+
+  function createSolo() {
+    startSoloGame(newGame('solo', script, count, 'single'))
+    navigate('/solo', true)
+  }
 
   async function create() {
     setBusy(true)
@@ -55,9 +61,17 @@ export default function StCreate() {
           <div className="mt-1 text-sm">{SCRIPTS[script].setupNote}</div>
         </Card>
       </div>
-      <Button big variant="primary" className="mt-8 w-full" onClick={create} disabled={busy}>
-        {busy ? 'Creating…' : 'Create game'}
-      </Button>
+      <div className="mt-8"><Label>How do players get their roles?</Label></div>
+      <div className="flex flex-col gap-3">
+        <Button big variant="primary" className="w-full" onClick={create} disabled={busy || !configured}>
+          {busy ? 'Creating…' : 'Players join with their phones'}
+        </Button>
+        <p className="-mt-1 text-center text-sm text-dim">You get a 2-digit code. Everyone sees their own role on their own phone.</p>
+        <Button big className="w-full" onClick={createSolo} disabled={busy}>
+          Single phone, pass it around
+        </Button>
+        <p className="-mt-1 text-center text-sm text-dim">Type in names, then hand this phone to each player to read their role. Works offline.</p>
+      </div>
       <Footer />
     </Page>
   )

@@ -50,7 +50,7 @@ function view(g: Game, id: string): PlayerView {
   return {
     code: g.code, script: g.script, status: g.status, phase: g.phase, count: g.count,
     players: g.players.map((p) => ({ id: p.id, name: p.name, dead: p.dead, ghost: p.ghost })),
-    me: me ? { id: me.id, name: me.name, dead: me.dead, executed: me.executed, ghost: me.ghost, reveal: g.status === 'playing' ? me.reveal : null } : null,
+    me: me ? { id: me.id, name: me.name, dead: me.dead, executed: me.executed, ghost: me.ghost, reveal: g.status === 'playing' && g.phase === 0 ? me.reveal : null } : null,
   }
 }
 

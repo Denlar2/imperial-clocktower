@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Script } from '../data/characters'
 import type { Game } from '../game/types'
 import { ST_KEY, delLocal } from '../lib/device'
+import { endSoloGame } from '../lib/useSoloGame'
 import { absoluteUrl, navigate } from '../lib/router'
 import { Button, Card, Footer, Input, Toast, copyText, useToast } from './kit'
 
@@ -15,8 +16,8 @@ export default function More({ game, S, update }: { game: Game; S: Script; updat
     <>
       <Toast msg={toast} />
       <Card className="text-center">
-        <div className="text-dim">Game code</div>
-        <div className="display text-5xl text-candle">{game.code}</div>
+        <div className="text-dim">{game.mode === 'single' ? 'Single phone' : 'Game code'}</div>
+        {game.mode !== 'single' && <div className="display text-5xl text-candle">{game.code}</div>}
         <div className="text-sm text-dim">{S.name} · {game.players.length} players</div>
       </Card>
       <div className="mt-3 flex flex-col gap-2">
@@ -54,8 +55,8 @@ export default function More({ game, S, update }: { game: Game; S: Script; updat
       >
         Back to lobby (re-deal)
       </Button>
-      <Button variant="ghost" className="mt-2 w-full" onClick={() => { delLocal(ST_KEY); navigate('/') }}>
-        Leave this game
+      <Button variant="ghost" className="mt-2 w-full" onClick={() => { if (game.mode === 'single') { if (!confirm('End this game and forget it?')) return; endSoloGame() } else delLocal(ST_KEY); navigate('/') }}>
+        {game.mode === 'single' ? 'End game' : 'Leave this game'}
       </Button>
       <Footer />
     </>

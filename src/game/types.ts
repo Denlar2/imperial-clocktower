@@ -31,10 +31,14 @@ export interface Player {
 }
 
 export type Status = 'lobby' | 'playing'
+/** 'phones': players join with their own phones. 'single': one phone passed around, no backend. */
+export type Mode = 'phones' | 'single'
 
 export interface Game {
   v: 1
   code: string
+  /** Defaults to 'phones' when missing (older games). */
+  mode?: Mode
   script: ScriptId
   /** Target player count chosen by the ST. */
   count: number

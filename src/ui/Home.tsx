@@ -1,12 +1,15 @@
 import { PLAYER_KEY, ST_KEY, fresh, getLocal, type Remembered } from '../lib/device'
 import { navigate } from '../lib/router'
 import { configured } from '../lib/store'
+import { SOLO_KEY } from '../lib/useSoloGame'
+import type { Game } from '../game/types'
 import { SCRIPT_IDS, SCRIPTS } from '../data/characters'
 import { Banner, Button, Footer, Page } from './kit'
 
 export default function Home() {
   const st = fresh(getLocal<Remembered>(ST_KEY))
   const pl = fresh(getLocal<Remembered>(PLAYER_KEY))
+  const solo = getLocal<Game>(SOLO_KEY)
   return (
     <Page>
       <div className="flex flex-col items-center pt-10 text-center">
@@ -27,12 +30,17 @@ export default function Home() {
             Resume your game · code {st.code}
           </Button>
         )}
+        {solo && (
+          <Button big variant="primary" onClick={() => navigate('/solo')}>
+            Resume single-phone game
+          </Button>
+        )}
         {pl && (
           <Button big variant="primary" onClick={() => navigate(`/p/${pl.code}`)}>
             Back to game {pl.code}{pl.name ? ` as ${pl.name}` : ''}
           </Button>
         )}
-        <Button big variant={st || pl ? 'default' : 'primary'} onClick={() => navigate('/st')} disabled={!configured}>
+        <Button big variant={st || pl || solo ? 'default' : 'primary'} onClick={() => navigate('/st')}>
           Run a game
         </Button>
         <Button big onClick={() => navigate('/join')} disabled={!configured}>
