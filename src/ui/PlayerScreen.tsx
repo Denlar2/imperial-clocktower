@@ -17,11 +17,16 @@ export default function PlayerScreen({ code }: { code: string }) {
   const [fullscreen, setFullscreen] = useState(false)
 
   const status = view?.status
-  const hasReveal = !!view?.me?.reveal
+  // The role is only shown between "Start game" and the first night, whatever the server sends.
+  const before = status === 'playing' && view?.phase === 0
+  const reveal = before ? view?.me?.reveal ?? null : null
+  const hasReveal = !!reveal
   // First time the reveal arrives: go full screen (hidden) so the player flips it themselves.
   useEffect(() => {
-    if (status === 'playing' && hasReveal && !seenReveal) { setSeenReveal(true); setFullscreen(true); setShowRole(false) }
-  }, [status, hasReveal, seenReveal])
+    if (hasReveal && !seenReveal) { setSeenReveal(true); setFullscreen(true); setShowRole(false) }
+  }, [hasReveal, seenReveal])
+  // Night falls: drop the token screen if the player is still on it.
+  useEffect(() => { if (!hasReveal) { setFullscreen(false); setShowRole(false) } }, [hasReveal])
   useEffect(() => { if (view?.me) setLocal(PLAYER_KEY, { code, name: view.me.name, at: Date.now() }) }, [view?.me, code])
 
   if (loading) return <Page title={`Game ${code}`}><Empty>Connecting…</Empty></Page>
@@ -46,10 +51,10 @@ export default function PlayerScreen({ code }: { code: string }) {
     )
   }
 
-  if (fullscreen && me.reveal) {
+  if (fullscreen && reveal) {
     return (
       <>
-        <RoleReveal reveal={me.reveal} scriptId={view.script} name={me.name} shown={showRole} onToggle={() => setShowRole((s) => !s)} />
+        <RoleReveal reveal={reveal} scriptId={view.script} name={me.name} shown={showRole} onToggle={() => setShowRole((s) => !s)} />
         {!showRole && (
           <button type="button" onClick={() => setFullscreen(false)} className="safe-b fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full px-4 py-2 text-dim underline">
             Done, back to the game
@@ -60,7 +65,6 @@ export default function PlayerScreen({ code }: { code: string }) {
   }
 
   const alive = !me.dead
-  const before = view.status === 'playing' && view.phase === 0
   return (
     <Page title={S?.name ?? 'Clocktower'} right={<span className="text-sm text-dim">code {code}</span>}>
       {error && <Banner>{error}</Banner>}
