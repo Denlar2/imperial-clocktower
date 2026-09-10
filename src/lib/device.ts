@@ -9,22 +9,26 @@ function randomId(): string {
   return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+// In local (no-server) mode each browser tab is its own device, so one browser can host the
+// Storyteller and several players for development.
+const store = () => (import.meta.env.VITE_BACKEND === 'local' ? sessionStorage : localStorage)
+
 export function deviceId(): string {
   try {
-    let id = localStorage.getItem(KEY)
-    if (!id) { id = randomId(); localStorage.setItem(KEY, id) }
+    let id = store().getItem(KEY)
+    if (!id) { id = randomId(); store().setItem(KEY, id) }
     return id
   } catch { return 'nostorage-' + Math.random().toString(36).slice(2) }
 }
 
 export function getLocal<T>(key: string): T | null {
-  try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : null } catch { return null }
+  try { const v = store().getItem(key); return v ? (JSON.parse(v) as T) : null } catch { return null }
 }
 export function setLocal(key: string, value: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* private mode */ }
+  try { store().setItem(key, JSON.stringify(value)) } catch { /* private mode */ }
 }
 export function delLocal(key: string) {
-  try { localStorage.removeItem(key) } catch { /* ignore */ }
+  try { store().removeItem(key) } catch { /* ignore */ }
 }
 
 export interface Remembered { code: string; at: number; name?: string }

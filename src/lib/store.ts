@@ -1,12 +1,15 @@
 // Sync adapter. Everything that talks to the backend lives here so it can be swapped out.
 // Backend: Supabase — see supabase/schema.sql for the RPC functions this calls.
+// With VITE_BACKEND=local the same API is served from localStorage (see store.local.ts).
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Game, PlayerView } from '../game/types'
+import * as local from './store.local'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+export const useLocal = import.meta.env.VITE_BACKEND === 'local'
 
-export const configured = !!(url && key)
+export const configured = useLocal || !!(url && key)
 
 let client: SupabaseClient | null = null
 function sb(): SupabaseClient {
@@ -19,29 +22,34 @@ function fail(e: { message?: string } | null): never {
 }
 
 export async function createGame(secret: string, state: Game): Promise<string> {
+  if (useLocal) return local.createGame(secret, state)
   const { data, error } = await sb().rpc('create_game', { p_secret: secret, p_state: state })
   if (error) fail(error)
   return data as string
 }
 
 export async function stRead(code: string, secret: string): Promise<Game | null> {
+  if (useLocal) return local.stRead(code, secret)
   const { data, error } = await sb().rpc('st_read', { p_code: code, p_secret: secret })
   if (error) fail(error)
   return (data as Game | null) ?? null
 }
 
 export async function stWrite(code: string, secret: string, state: Game): Promise<void> {
+  if (useLocal) return local.stWrite(code, secret, state)
   const { error } = await sb().rpc('st_write', { p_code: code, p_secret: secret, p_state: state })
   if (error) fail(error)
 }
 
 export async function joinGame(code: string, id: string, name: string): Promise<PlayerView> {
+  if (useLocal) return local.joinGame(code, id, name)
   const { data, error } = await sb().rpc('join_game', { p_code: code, p_id: id, p_name: name })
   if (error) fail(error)
   return data as PlayerView
 }
 
 export async function playerView(code: string, id: string): Promise<PlayerView | null> {
+  if (useLocal) return local.playerView(code, id)
   const { data, error } = await sb().rpc('player_view', { p_code: code, p_id: id })
   if (error) fail(error)
   return (data as PlayerView | null) ?? null
@@ -49,6 +57,7 @@ export async function playerView(code: string, id: string): Promise<PlayerView |
 
 /** Tell everyone else in the game to refetch. */
 export async function poke(code: string): Promise<void> {
+  if (useLocal) return local.poke(code)
   try {
     await sb().channel(`game:${code}`).send({ type: 'broadcast', event: 'poke', payload: { t: Date.now() } })
   } catch { /* best effort — polling covers it */ }
@@ -59,6 +68,7 @@ export async function poke(code: string): Promise<void> {
  * so callers refetch after a dropped connection. Returns an unsubscribe function.
  */
 export function subscribe(code: string, onPoke: () => void): () => void {
+  if (useLocal) return local.subscribe(code, onPoke)
   if (!configured) return () => {}
   const ch = sb().channel(`game:${code}`)
   ch.on('broadcast', { event: 'poke' }, () => onPoke())
