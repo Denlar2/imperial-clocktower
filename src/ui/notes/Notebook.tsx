@@ -11,7 +11,7 @@ type Set = (fn: (n: NB) => NB) => void
 type Tab = 'players' | 'days' | 'chars' | 'me'
 
 /** The notebook UI. Used standalone and inside the player screen of a live game. */
-export default function Notebook({ nb, setNb, title, right, back, header, onDelete }: { nb: NB; setNb: Set; title?: ReactNode; right?: ReactNode; back?: string | (() => void); header?: ReactNode; onDelete?: () => void }) {
+export default function Notebook({ nb, setNb, title, right, back, header, onDelete, onLeave }: { nb: NB; setNb: Set; title?: ReactNode; right?: ReactNode; back?: string | (() => void); header?: ReactNode; onDelete?: () => void; onLeave?: () => void }) {
   const [tab, setTab] = useState<Tab>('players')
   const S = getScript(nb.script)!
   const titles: Record<Tab, string> = { players: 'Players', days: 'Days & votes', chars: 'Characters', me: 'You' }
@@ -26,7 +26,7 @@ export default function Notebook({ nb, setNb, title, right, back, header, onDele
       {tab === 'players' && <PlayersTab nb={nb} setNb={setNb} S={S} />}
       {tab === 'days' && <DaysTab nb={nb} setNb={setNb} />}
       {tab === 'chars' && <CharsTab nb={nb} setNb={setNb} S={S} />}
-      {tab === 'me' && <MeTab nb={nb} setNb={setNb} S={S} onDelete={onDelete} />}
+      {tab === 'me' && <MeTab nb={nb} setNb={setNb} S={S} onDelete={onDelete} onLeave={onLeave} />}
     </Page>
   )
 }

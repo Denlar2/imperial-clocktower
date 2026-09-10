@@ -6,7 +6,7 @@ import { CharSelect } from './CharPicker'
 
 type Set = (fn: (n: Notebook) => Notebook) => void
 
-export default function MeTab({ nb, setNb, S, onDelete }: { nb: Notebook; setNb: Set; S: Script; onDelete?: () => void }) {
+export default function MeTab({ nb, setNb, S, onDelete, onLeave }: { nb: Notebook; setNb: Set; S: Script; onDelete?: () => void; onLeave?: () => void }) {
   const c = getChar(S, nb.myRole)
   const nights = Math.max(1, nb.days.length)
   return (
@@ -50,6 +50,7 @@ export default function MeTab({ nb, setNb, S, onDelete }: { nb: Notebook; setNb:
       </div>
       <Button className="mt-6 w-full" onClick={() => navigate(`/sheet/${S.id}`)}>Character sheet</Button>
       {onDelete && <Button variant="danger" className="mt-2 w-full" onClick={onDelete}>Delete notebook</Button>}
+      {onLeave && <Button variant="danger" className="mt-2 w-full" onClick={onLeave}>Leave game</Button>}
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getScript } from '../data/characters'
 import { phaseName } from '../game/logic'
-import { PLAYER_KEY, deviceId, getLocal, setLocal, type Remembered } from '../lib/device'
+import { PLAYER_KEY, delLocal, deviceId, getLocal, setLocal, type Remembered } from '../lib/device'
 import { navigate } from '../lib/router'
 import { usePlayerView } from '../lib/usePlayerView'
 import { newNotebook, syncPlayers } from '../notes/model'
@@ -75,6 +75,7 @@ export default function PlayerScreen({ code }: { code: string }) {
   }
 
   const alive = !me.dead
+  const leave = () => { if (confirm('Leave this game? Your notes stay on this phone.')) { delLocal(PLAYER_KEY); navigate('/') } }
   if (view.status === 'playing' && !before && nb) {
     return (
       <Notebook
@@ -83,6 +84,7 @@ export default function PlayerScreen({ code }: { code: string }) {
         title={phaseName(view.phase)}
         right={<span className={cx('display text-xl', alive ? 'text-wax' : 'text-evil')}><span>{alive ? 'Alive' : 'Dead'}</span>{!alive && <span className="ml-1 text-xs text-dim">{me.ghost ? '👻' : 'no vote'}</span>}</span>}
         header={error ? <Banner>{error}</Banner> : undefined}
+        onLeave={leave}
       />
     )
   }
@@ -119,6 +121,7 @@ export default function PlayerScreen({ code }: { code: string }) {
       ) : null}
       <Button className="mt-6 w-full" onClick={() => navigate(`/sheet/${view.script}`)}>Character sheet</Button>
       <Button variant="ghost" className="mt-2 w-full" onClick={() => void refresh()}>Refresh</Button>
+      <Button variant="danger" className="mt-6 w-full" onClick={leave}>Leave game</Button>
       <Footer />
     </Page>
   )
