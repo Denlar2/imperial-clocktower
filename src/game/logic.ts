@@ -1,7 +1,6 @@
 import { COMP, MARKS, TYPES, charsOfType, getChar, outsiderMod, type CharType, type Mark, type Script } from '../data/characters'
-import type { Game, Player, Reveal, ScriptId } from './types'
-import type { ScriptId as SId } from '../data/characters'
-export type { SId as ScriptId }
+import type { Game, Player, Reveal } from './types'
+import type { ScriptId } from '../data/characters'
 
 export const shuffle = <T,>(a: T[], rnd: () => number = Math.random): T[] =>
   a.map((x) => [rnd(), x] as const).sort((p, q) => p[0] - q[0]).map((x) => x[1])
@@ -48,7 +47,7 @@ export function dealRoles(S: Script, players: Player[], rnd: () => number = Math
   while (tfSel.length > t) tfSel.splice(tfSel.findIndex((r) => r !== 'Balloonist' && r !== 'Baron'), 1)
   for (const r of tfAll.slice(t0)) { if (tfSel.length >= t) break; tfSel.push(r) }
   const roles = shuffle([...tfSel, ...shuffle(names('Outsider'), rnd).slice(0, o), ...mins, ...shuffle(names('Demon'), rnd).slice(0, d)], rnd)
-  let P = players.map((p, i) => ({ ...resetPlayer(p), role: roles[i] ?? null, fakeAs: null, evil: null }))
+  let P: Player[] = players.map((p, i) => ({ ...resetPlayer(p), role: roles[i] ?? null, fakeAs: null, evil: null }))
   P = seatMarionette(S, P)
   P = pickBountyHunterTarget(S, P, rnd)
   return assignFakes(S, P, rnd)
@@ -97,7 +96,7 @@ export function computeReveal(S: Script, P: Player[], i: number): Reveal | null 
   const p = P[i]
   const shown = shownRole(p)
   const c = getChar(S, shown)
-  if (!c) return null
+  if (!c || !shown) return null
   const evil = p.fakeAs ? roleEvil(S, shown) : isEvil(S, p)
   let mates = ''
   if (!p.fakeAs && roleEvil(S, p.role) && P.length >= 7) {

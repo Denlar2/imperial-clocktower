@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-night: #1d1b2e;
+  --color-dusk: #2b2841;
+  --color-candle: #e6b64a;
+  --color-wax: #f3e9d2;
+  --color-good: #7fb2e5;
+  --color-evil: #d9534f;
+  --color-dim: #9a93b5;
+  --color-line: #3d3958;
+  --font-display: "IM Fell English", Georgia, "Times New Roman", serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  background: var(--color-night);
+  color: var(--color-wax);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+#root { min-height: 100dvh; }
+
+h1, h2, h3, .display { font-family: var(--font-display); font-weight: 400; }
+
+/* 16px minimum stops iOS Safari zooming on focus */
+input, select, textarea, button { font: inherit; font-size: 16px; }
+select { -webkit-appearance: none; appearance: none; }
+
+.safe-b { padding-bottom: env(safe-area-inset-bottom); }
+.safe-t { padding-top: env(safe-area-inset-top); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .flip-in { animation: flip .35s cubic-bezier(.2,.7,.2,1); transform-origin: center; }
+  .fade-in { animation: fade .18s ease; }
+}
+@keyframes flip { from { transform: rotateY(90deg) scale(.9); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
