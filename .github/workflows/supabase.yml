@@ -10,7 +10,21 @@ on:
     - cron: '17 6 * * 1'
 
 jobs:
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call a public RPC with the anon key (counts as activity, needs no secret)
+        run: |
+          curl -sSf -X POST "$VITE_SUPABASE_URL/rest/v1/rpc/player_view" \
+            -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" -d '{"p_code":"ping","p_id":"ping"}'
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+
   migrate:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     # Protected environment: the owner must approve each run before the token is exposed to it.
     environment: supabase
