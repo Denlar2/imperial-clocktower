@@ -103,7 +103,7 @@ begin
     players := players || jsonb_build_array(jsonb_build_object(
       'id', p_id, 'name', nm, 'role', null, 'fakeAs', null, 'evil', null,
       'dead', false, 'executed', false, 'ghost', true,
-      'poison', false, 'drunk', false, 'safe', false, 'mad', false, 'note', '', 'reveal', null));
+      'poison', false, 'drunk', false, 'safe', false, 'mad', false, 'cursed', false, 'twin', null, 'note', '', 'reveal', null));
   end if;
   update games set state = jsonb_set(s, '{players}', players), updated_at = now() where code = p_code;
   return player_view(p_code, p_id);

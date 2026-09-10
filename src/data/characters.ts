@@ -6,9 +6,9 @@
 // fake  = this character is shown a different role ('Townsfolk' | 'Demon' | 'Good')
 // pick  = the night step has a target picker that sets this mark on the chosen player
 
-export type ScriptId = 'TB' | 'BMR' | 'UTT'
+export type ScriptId = 'TB' | 'BMR' | 'SV' | 'UTT'
 export type CharType = 'Townsfolk' | 'Outsider' | 'Minion' | 'Demon'
-export type Mark = 'poison' | 'drunk' | 'safe' | 'mad'
+export type Mark = 'poison' | 'drunk' | 'safe' | 'mad' | 'cursed'
 export type FakeKind = 'Townsfolk' | 'Demon' | 'Good'
 
 export interface Character {
@@ -39,7 +39,7 @@ export interface Script {
 
 export const TYPES: CharType[] = ['Townsfolk', 'Outsider', 'Minion', 'Demon']
 
-export const MARKS: Record<Mark, string> = { poison: 'Poisoned', drunk: 'Drunk', safe: 'Protected', mad: 'Mad' }
+export const MARKS: Record<Mark, string> = { poison: 'Poisoned', drunk: 'Drunk', safe: 'Protected', mad: 'Mad', cursed: 'Cursed' }
 
 /** players → [Townsfolk, Outsiders, Minions, Demon] */
 export const COMP: Record<number, [number, number, number, number]> = {
@@ -56,6 +56,13 @@ const shared: Record<string, Raw> = {
   Librarian: { t: 'Townsfolk', a: 'Starts knowing that one of two players is a particular Outsider, or that there are none.', n1: 'Show an Outsider token and point to two players, or show a 0.' },
   Lunatic: { t: 'Outsider', fake: 'Demon', a: 'Thinks they are a Demon, but are not. The real Demon knows who the Lunatic is and who they try to kill.', n1: 'Wake the Lunatic as a Demon; show fake Minions and 3 bluffs. Then wake the Demon and point out the Lunatic.', n: 'Wake the Lunatic as the Demon and let them "act". Nobody dies. Tell the real Demon who was chosen.' },
   Poisoner: { t: 'Minion', pick: 'poison', a: 'Each night, poisons one player until the next dusk.', n1: 'They pick a player. Mark poisoned.', n: 'They pick a player. Mark poisoned.' },
+  'Snake Charmer': { t: 'Townsfolk', a: 'Each night, picks a living player. If it is the Demon, they swap characters and alignments, and the new Snake Charmer is poisoned.', n1: 'They pick a player. If Demon: swap the two roles in the Grimoire, poison the new Snake Charmer.', n: 'They pick a player. If Demon: swap the two roles in the Grimoire, poison the new Snake Charmer.' },
+  Dreamer: { t: 'Townsfolk', a: 'Each night, picks a player (not themselves). Learns one good and one evil character; one of them is correct.', n1: 'They pick a player. Show one good and one evil character.', n: 'They pick a player. Show one good and one evil character.' },
+  'Town Crier': { t: 'Townsfolk', a: 'Each night after the first, learns whether a Minion made a nomination today.', n: 'Nod or shake your head.' },
+  Savant: { t: 'Townsfolk', a: 'Each day, may visit the Storyteller privately for two statements: one true, one false.' },
+  Seamstress: { t: 'Townsfolk', a: 'Once per game at night, picks two other players. Learns whether they are on the same team.', n1: 'If used: they pick two. Nod or shake.', n: 'If used: they pick two. Nod or shake.' },
+  Mutant: { t: 'Outsider', a: 'If they are "mad" that they are an Outsider, they may be executed.' },
+  Cerenovus: { t: 'Minion', pick: 'mad', a: 'Each night, picks a player and a good character. That player must act "mad" that they are that character tomorrow, or may be executed.', n1: 'They pick a player and a character. Wake the target, show the character. Mark mad.', n: 'They pick a player and a character. Wake the target, show the character. Mark mad.' },
 }
 
 const RAW: Record<ScriptId, { name: string; chars: Record<string, Raw>; first: string[]; other: string[]; setup: string; jinx?: string[] }> = {
@@ -122,6 +129,39 @@ const RAW: Record<ScriptId, { name: string; chars: Record<string, Raw>; first: s
     other: ['Sailor', 'Innkeeper', 'Courtier', 'Gambler', "Devil's Advocate", 'Exorcist', 'Lunatic', 'Zombuul', 'Pukka', 'Shabaloth', 'Po', 'Assassin', 'Godfather', 'Gossip', 'Tinker', 'Moonchild', 'Grandmother', 'Professor', 'Chambermaid', 'Goon'],
     setup: 'Godfather adds or removes 1 Outsider.',
   },
+  SV: {
+    name: 'Sects & Violets',
+    chars: {
+      Clockmaker: { t: 'Townsfolk', a: 'Starts knowing how many seats apart the Demon and the nearest Minion sit.', n1: 'Show the number of steps from the Demon to the closest Minion.' },
+      Dreamer: shared['Dreamer'],
+      'Snake Charmer': shared['Snake Charmer'],
+      Mathematician: { t: 'Townsfolk', a: "Each night, learns how many players' abilities went wrong today or tonight because of drunkenness or poisoning.", n1: 'Show the number of abilities that malfunctioned.', n: 'Show the number of abilities that malfunctioned since dawn.' },
+      Flowergirl: { t: 'Townsfolk', a: 'Each night after the first, learns whether the Demon voted today.', n: 'Nod if the Demon voted today, otherwise shake.' },
+      'Town Crier': shared['Town Crier'],
+      Oracle: { t: 'Townsfolk', a: 'Each night after the first, learns how many dead players are evil.', n: 'Show the number of evil dead players.' },
+      Savant: shared['Savant'],
+      Seamstress: shared['Seamstress'],
+      Philosopher: { t: 'Townsfolk', pick: 'drunk', a: 'Once per game at night, names a good character and gains that ability. If that character is in play, that player is drunk from now on.', n1: 'If used: they name a good character. Note the new ability here; if it is in play, mark that player drunk.', n: 'If used: they name a good character. Note the new ability here; if it is in play, mark that player drunk.' },
+      Artist: { t: 'Townsfolk', a: 'Once per game, during the day, may privately ask the Storyteller one yes/no question.' },
+      Juggler: { t: 'Townsfolk', a: 'On their first day, may publicly guess up to five players\' characters. That night, learns how many guesses were right.', n: 'Only the night after their first day: show how many guesses were correct.' },
+      Sage: { t: 'Townsfolk', a: 'If the Demon kills them, they learn that the Demon is one of two players.', n: 'Only if the Demon killed the Sage tonight: point to two players, one of them the Demon.' },
+      Mutant: shared['Mutant'],
+      Sweetheart: { t: 'Outsider', a: 'When they die, one player is drunk from then on.', n: 'If the Sweetheart died today or tonight: choose a player to be drunk for the rest of the game.' },
+      Barber: { t: 'Outsider', a: 'If they die, that night the Demon may swap the characters of two players.', n: 'If the Barber died today or tonight: wake the Demon; they may pick two players whose characters swap. Change the roles here.' },
+      Klutz: { t: 'Outsider', a: 'When they learn they have died, they must publicly pick a living player. If that player is evil, good loses.' },
+      'Evil Twin': { t: 'Minion', a: 'Paired with a good player; both know who the other is. Good cannot win while both are alive. If the good twin is executed, evil wins.', n1: 'Wake both twins; show each the other and the good twin\'s character.' },
+      Witch: { t: 'Minion', pick: 'cursed', a: 'Each night, curses a player. If that player nominates tomorrow, they die. Loses the ability when only three players live.', n1: 'They pick a player. Mark cursed.', n: 'If four or more are alive: they pick a player. Mark cursed.' },
+      Cerenovus: shared['Cerenovus'],
+      'Pit-Hag': { t: 'Minion', a: 'Each night after the first, picks a player and a character. If that character is not in play, the player becomes it. If a Demon is created, deaths tonight are up to the Storyteller.', n: 'They pick a player and a character. If not in play: change the role here. New Demon: you choose who dies tonight.' },
+      'Fang Gu': { t: 'Demon', a: 'Each night after the first, picks a player who dies. The first time an Outsider is chosen, they become an evil Fang Gu instead and the old Fang Gu dies. One extra Outsider is in play.', n: 'They pick a player, who dies. First Outsider chosen: that player becomes the evil Fang Gu (change roles here), the old Fang Gu dies.' },
+      Vigormortis: { t: 'Demon', a: 'Each night after the first, picks a player who dies. A Minion they kill keeps their ability, and one of that Minion\'s Townsfolk neighbours is poisoned. One fewer Outsider is in play.', n: 'They pick a player, who dies. If a Minion: they keep their ability; mark a Townsfolk neighbour of the Minion poisoned.' },
+      'No Dashii': { t: 'Demon', a: 'Each night after the first, picks a player who dies. Their two nearest Townsfolk neighbours are poisoned.', n: 'They pick a player, who dies. Remember: the nearest Townsfolk on each side of the No Dashii are poisoned.' },
+      Vortox: { t: 'Demon', a: 'Each night after the first, picks a player who dies. All Townsfolk information is false. If nobody is executed during a day, evil wins.', n: 'They pick a player, who dies. All Townsfolk info tonight must be false.' },
+    },
+    first: ['Philosopher', 'Minion info', 'Demon info', 'Evil Twin', 'Witch', 'Cerenovus', 'Clockmaker', 'Dreamer', 'Snake Charmer', 'Seamstress', 'Mathematician'],
+    other: ['Philosopher', 'Snake Charmer', 'Witch', 'Cerenovus', 'Pit-Hag', 'Fang Gu', 'No Dashii', 'Vortox', 'Vigormortis', 'Barber', 'Sweetheart', 'Sage', 'Dreamer', 'Flowergirl', 'Town Crier', 'Oracle', 'Seamstress', 'Juggler', 'Mathematician'],
+    setup: 'Fang Gu adds 1 Outsider. Vigormortis removes 1 Outsider.',
+  },
   UTT: {
     name: 'Unholier Than Thou',
     chars: {
@@ -130,20 +170,20 @@ const RAW: Record<ScriptId, { name: string; chars: Record<string, Raw>; first: s
       Librarian: shared.Librarian,
       'Bounty Hunter': { t: 'Townsfolk', a: 'Starts knowing one evil player. When that player dies, learns another evil player that night. One Townsfolk in the game is secretly evil.', n1: 'Point to the known evil player.', n: 'If the known player died today or tonight: point to a new evil player.' },
       Balloonist: { t: 'Townsfolk', a: 'Each night, learns a player whose character type differs from the one learned the night before. May add one Outsider to the game.', n1: 'Point to any player.', n: 'Point to a player of a different character type than last time.' },
-      'Snake Charmer': { t: 'Townsfolk', a: 'Each night, picks a living player. If it is the Demon, they swap characters and alignments, and the new Snake Charmer is poisoned.', n1: 'They pick a player. If Demon: swap the two roles here, poison the new Snake Charmer.', n: 'They pick a player. If Demon: swap the two roles here, poison the new Snake Charmer.' },
-      Dreamer: { t: 'Townsfolk', a: 'Each night, picks a player (not themselves). Learns one good and one evil character; one of them is correct.', n1: 'They pick a player. Show one good and one evil character.', n: 'They pick a player. Show one good and one evil character.' },
-      'Town Crier': { t: 'Townsfolk', a: 'Each night after the first, learns whether a Minion made a nomination today.', n: 'Nod or shake your head.' },
-      Savant: { t: 'Townsfolk', a: 'Each day, may visit the Storyteller privately for two statements: one true, one false.' },
+      'Snake Charmer': shared['Snake Charmer'],
+      Dreamer: shared['Dreamer'],
+      'Town Crier': shared['Town Crier'],
+      Savant: shared['Savant'],
       Nightwatchman: { t: 'Townsfolk', a: 'Once per game at night, picks a player. That player learns who the Nightwatchman is.', n1: 'If used: wake the chosen player and point to the Nightwatchman.', n: 'If used: wake the chosen player and point to the Nightwatchman.' },
-      Seamstress: { t: 'Townsfolk', a: 'Once per game at night, picks two other players. Learns whether they are on the same team.', n1: 'If used: they pick two. Nod or shake.', n: 'If used: they pick two. Nod or shake.' },
+      Seamstress: shared['Seamstress'],
       Amnesiac: { t: 'Townsfolk', a: 'Does not know their own ability. Each day may privately guess it and learns how close the guess is.', n1: 'Run the secret ability you gave them, if it acts at night.', n: 'Run the secret ability you gave them, if it acts at night.' },
       Magician: { t: 'Townsfolk', a: 'The Demon believes they are a Minion; the Minions believe they are the Demon.', n1: 'Handled in Minion info and Demon info.' },
       Lunatic: shared.Lunatic,
-      Mutant: { t: 'Outsider', a: 'If they are "mad" that they are an Outsider, they may be executed.' },
+      Mutant: shared['Mutant'],
       Politician: { t: 'Outsider', a: 'If they were the player most responsible for their team losing, they switch sides and win, even if dead.' },
       Damsel: { t: 'Outsider', a: 'Every Minion knows a Damsel is in play. If a Minion publicly guesses who it is (one guess total), good loses.' },
       Poisoner: shared.Poisoner,
-      Cerenovus: { t: 'Minion', pick: 'mad', a: 'Each night, picks a player and a good character. That player must act "mad" that they are that character tomorrow, or may be executed.', n1: 'They pick a player and a character. Wake the target, show the character. Mark mad.', n: 'They pick a player and a character. Wake the target, show the character. Mark mad.' },
+      Cerenovus: shared['Cerenovus'],
       Marionette: { t: 'Minion', fake: 'Good', a: 'Thinks they are a good character but is actually evil. Sits next to the Demon, who knows who they are.', n1: 'Wake the Demon and point to the Marionette (skip this if the Magician is alive).' },
       Goblin: { t: 'Minion', a: 'If they publicly claim to be the Goblin when nominated and are executed that day, evil wins.' },
       Leviathan: { t: 'Demon', a: 'Never kills. Everyone knows it is in play. If more than one good player is executed, evil wins. After day 5, evil wins.', n1: 'At dawn: announce "The Leviathan is in play." Day 1 starts.', n: 'At dawn: announce it again. Check the day counter.' },
@@ -176,8 +216,8 @@ function build(id: ScriptId): Script {
   return { id, name: r.name, characters, firstNight: r.first, otherNight: r.other, setupNote: r.setup, jinx: r.jinx }
 }
 
-export const SCRIPTS: Record<ScriptId, Script> = { TB: build('TB'), BMR: build('BMR'), UTT: build('UTT') }
-export const SCRIPT_IDS: ScriptId[] = ['TB', 'BMR', 'UTT']
+export const SCRIPTS: Record<ScriptId, Script> = { TB: build('TB'), BMR: build('BMR'), SV: build('SV'), UTT: build('UTT') }
+export const SCRIPT_IDS: ScriptId[] = ['TB', 'BMR', 'SV', 'UTT']
 
 export function getScript(id: string | null | undefined): Script | null {
   return id && id in SCRIPTS ? SCRIPTS[id as ScriptId] : null
@@ -191,10 +231,11 @@ export function charsOfType(script: Script, type: CharType): Character[] {
   return script.characters.filter((c) => c.type === type)
 }
 
-/** Outsider count modifier for a random deal, given the roles about to be dealt. Mirrors the reference. */
+/** Outsider count modifier for a random deal, given the roles about to be dealt (Minions, Demon and Townsfolk). */
 export function outsiderMod(script: Script, roles: string[], rnd: () => number = Math.random): number {
   if (script.id === 'TB') return roles.includes('Baron') ? 2 : 0
   if (script.id === 'BMR') return roles.includes('Godfather') ? (rnd() < 0.5 ? 1 : -1) : 0
+  if (script.id === 'SV') return roles.includes('Fang Gu') ? 1 : roles.includes('Vigormortis') ? -1 : 0
   if (script.id === 'UTT') return roles.includes('Balloonist') && rnd() < 0.5 ? 1 : 0
   return 0
 }

@@ -26,6 +26,10 @@ export interface Player {
   drunk: boolean
   safe: boolean
   mad: boolean
+  /** Witch's curse (nightly). Older games may lack this field. */
+  cursed?: boolean
+  /** Evil Twin pairing: id of the other twin. */
+  twin?: string | null
   note: string
   reveal: Reveal | null
 }

@@ -25,7 +25,7 @@ export default function Night({ game, S, update, phaseButton }: { game: Game; S:
       <div className="flex flex-col gap-2">
         {rows.filter((r) => r.present || showAll).map((r) => {
           const done = !!game.done[r.index]
-          const cur = r.pick ? game.players.find((p) => p[r.pick!])?.id ?? '' : ''
+          const cur = r.pick ? game.players.find((p) => !!p[r.pick!])?.id ?? '' : ''
           return (
             <label key={r.index} className={cx('flex items-start gap-3 rounded-2xl border border-line bg-dusk p-3', done && 'opacity-40', !r.present && 'opacity-40')}>
               <input

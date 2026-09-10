@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { SCRIPTS, COMP, getChar } from '../data/characters'
-import { assignFakes, blankPlayer, computeReveal, dealRoles, leviathan, newGame, nextPhase, nightRows, seatMarionette, withReveals } from './logic'
+import { assignFakes, blankPlayer, computeReveal, dealRoles, leviathan, newGame, nextPhase, nightRows, pairTwins, seatMarionette, withReveals } from './logic'
 
 const mk = (n: number) => Array.from({ length: n }, (_, i) => blankPlayer(`id${i}`, `P${i + 1}`))
 const seeded = (seed: number) => () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
 
 describe('dealRoles', () => {
-  for (const id of ['TB', 'BMR', 'UTT'] as const) {
+  for (const id of ['TB', 'BMR', 'SV', 'UTT'] as const) {
     const S = SCRIPTS[id]
     for (let n = 5; n <= 15; n++) {
       it(`${id} ${n} players follows the set-up table`, () => {
@@ -23,6 +23,11 @@ describe('dealRoles', () => {
           if (id === 'TB') expect(mod).toBe(P.some((p) => p.role === 'Baron') ? 2 : 0)
           if (id === 'BMR') expect(P.some((p) => p.role === 'Godfather') ? (o === 0 ? [1] : [1, -1]) : [0]).toContain(mod)
           if (id === 'UTT') expect(P.some((p) => p.role === 'Balloonist') ? [0, 1] : [0]).toContain(mod)
+          if (id === 'SV') expect(mod).toBe(P.some((p) => p.role === 'Fang Gu') ? 1 : P.some((p) => p.role === 'Vigormortis') && o > 0 ? -1 : 0)
+          // Evil Twin is paired with exactly one good player, both ways
+          const et = P.find((p) => p.role === 'Evil Twin')
+          if (et) { const g = P.find((p) => p.id === et.twin)!; expect(getChar(S, g.role)!.type).toMatch(/Townsfolk|Outsider/); expect(g.twin).toBe(et.id); expect(P.filter((p) => p.twin)).toHaveLength(2) }
+          else expect(P.every((p) => !p.twin)).toBe(true)
           expect(types.filter((x) => x === 'Townsfolk')).toHaveLength(t - mod)
           // fakes
           for (const p of P) {
@@ -52,6 +57,21 @@ describe('seatMarionette', () => {
     const out = seatMarionette(S, P)
     expect(out.findIndex((p) => p.role === 'Marionette')).toBe(4)
     expect(out[0].role).toBe('Dreamer')
+  })
+})
+
+describe('pairTwins', () => {
+  it('pairs the Evil Twin with a good player and keeps a valid pairing', () => {
+    const S = SCRIPTS.SV
+    const P = mk(6)
+    ;['Evil Twin', 'Vortox', 'Clockmaker', 'Sage', 'Klutz', 'Oracle'].forEach((r, i) => (P[i].role = r))
+    const out = pairTwins(S, P, seeded(3))
+    const twin = out.find((p) => p.id === out[0].twin)!
+    expect(['Clockmaker', 'Sage', 'Klutz', 'Oracle']).toContain(twin.role)
+    expect(pairTwins(S, out, seeded(9))).toBe(out)
+    const rev = withReveals(S, out)
+    expect(rev[0].reveal!.mates).toContain(`Your good twin is ${twin.name}`)
+    expect(rev.find((p) => p.id === twin.id)!.reveal!.mates).toContain('Evil Twin')
   })
 })
 

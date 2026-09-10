@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { COMP, TYPES, charsOfType, getChar, type Script } from '../data/characters'
-import { assignFakes, dealRoles, isEvil, moveSeat, pickBountyHunterTarget, resetPlayer, withReveals } from '../game/logic'
+import { assignFakes, dealRoles, isEvil, moveSeat, pairTwins, pickBountyHunterTarget, resetPlayer, withReveals } from '../game/logic'
 import type { Game } from '../game/types'
 import { absoluteUrl, navigate } from '../lib/router'
 import { blankPlayer } from '../game/logic'
@@ -30,6 +30,7 @@ export default function Lobby({ game, S, update, error, saving }: { game: Game; 
     update((g) => {
       let players = g.players.map(resetPlayer)
       if (!players.some((p) => p.evil != null)) players = pickBountyHunterTarget(S, players)
+      players = pairTwins(S, players)
       players = assignFakes(S, players)
       players = withReveals(S, players)
       return { ...g, players, status: 'playing', phase: 0, done: {}, votes: [] }

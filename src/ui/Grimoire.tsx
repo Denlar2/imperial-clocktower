@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { MARKS, getChar, type Mark, type Script } from '../data/characters'
 import { counts, isEvil, leviathan, notInPlay, phaseName } from '../game/logic'
 import type { Game, Player } from '../game/types'
 import { Card, Chip, alignClass, cx } from './kit'
+import { CharSelect } from './notes/CharPicker'
 
 type Update = (fn: (g: Game) => Game) => void
 
@@ -11,6 +12,7 @@ export default function Grimoire({ game, S, update, phaseButton }: { game: Game;
   const c = counts(S, P)
   const lev = leviathan(S, game)
   const setP = (id: string, fn: (p: Player) => Player) => update((g) => ({ ...g, players: g.players.map((p) => (p.id === id ? fn(p) : p)) }))
+  const [editing, setEditing] = useState<string | null>(null)
 
   return (
     <>
@@ -34,18 +36,31 @@ export default function Grimoire({ game, S, update, phaseButton }: { game: Game;
                 <span className="text-sm text-dim">{i + 1}</span>
                 <span className={cx('display text-xl', p.dead && 'line-through')}>{p.name}</span>
               </div>
-              <div className={cx('text-sm', alignClass(isEvil(S, p)))}>
+              <button type="button" className={cx('block w-full text-left text-sm', alignClass(isEvil(S, p)))} onClick={() => setEditing(editing === p.id ? null : p.id)} aria-label={`Change role for ${p.name}`}>
                 {p.role}
                 {p.fakeAs && <span className="text-dim"> (thinks: {p.fakeAs})</span>}
-                {p.evil != null && <span className="text-dim"> (turned evil)</span>}
-                <span className="text-dim"> · {ch?.type}</span>
-              </div>
+                {p.evil != null && <span className="text-dim"> ({p.evil ? 'now evil' : 'now good'})</span>}
+                {p.twin && <span className="text-dim"> · twin: {P.find((q) => q.id === p.twin)?.name}</span>}
+                <span className="text-dim"> · {ch?.type} ✎</span>
+              </button>
+              {editing === p.id && (
+                <div className="mt-2 rounded-xl border border-line p-2">
+                  <div className="mb-1 text-xs text-dim">Change character (Pit-Hag, Snake Charmer, Fang Gu, Barber, Imp star-pass…)</div>
+                  <CharSelect S={S} value={p.role} onChange={(v) => setP(p.id, (q) => ({ ...q, role: v, fakeAs: null }))} aria-label={`Role for ${p.name}`} />
+                  <div className="mt-2 mb-1 text-xs text-dim">Alignment</div>
+                  <div className="flex gap-1.5">
+                    <Chip on={p.evil == null} onClick={() => setP(p.id, (q) => ({ ...q, evil: null }))}>From character</Chip>
+                    <Chip on={p.evil === false} onClick={() => setP(p.id, (q) => ({ ...q, evil: false }))}>Good</Chip>
+                    <Chip on={p.evil === true} bad onClick={() => setP(p.id, (q) => ({ ...q, evil: true }))}>Evil</Chip>
+                  </div>
+                </div>
+              )}
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Chip on={p.dead} bad onClick={() => setP(p.id, (q) => ({ ...q, dead: !q.dead, executed: q.dead ? false : q.executed }))}>{p.dead ? 'Dead' : 'Alive'}</Chip>
                 <Chip on={p.executed} bad onClick={() => setP(p.id, (q) => ({ ...q, executed: !q.executed, dead: !q.executed ? true : q.dead }))}>Executed</Chip>
                 {p.dead && <Chip on={p.ghost} onClick={() => setP(p.id, (q) => ({ ...q, ghost: !q.ghost }))}>{p.ghost ? 'Ghost vote left' : 'Ghost vote used'}</Chip>}
                 {(Object.keys(MARKS) as Mark[]).map((k) => (
-                  <Chip key={k} on={p[k]} bad onClick={() => setP(p.id, (q) => ({ ...q, [k]: !q[k] }))}>{MARKS[k]}</Chip>
+                  <Chip key={k} on={!!p[k]} bad onClick={() => setP(p.id, (q) => ({ ...q, [k]: !q[k] }))}>{MARKS[k]}</Chip>
                 ))}
               </div>
               <input

@@ -1,7 +1,8 @@
 # Project: Imperial Clocktower (Blood on the Clocktower storyteller app)
 
 Read README.md first. The original build brief is docs/SPEC.md and the single-file reference
-implementation (source of all character data and rules) is docs/reference-storyteller.html.
+implementation (source of the TB/BMR/UTT character data and rules) is docs/reference-storyteller.html.
+Sects & Violets was added later from general knowledge of the game, paraphrased.
 
 Rules of engagement:
 - Backend is Supabase via RPC functions in supabase/schema.sql; all backend access goes through src/lib/store.ts.

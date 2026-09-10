@@ -9,7 +9,7 @@ their own role on their own phone. Nobody else's role is ever sent to a player's
 
 **Live app:** https://denlar2.github.io/imperial-clocktower/
 
-Scripts: Trouble Brewing, Bad Moon Rising, Unholier Than Thou (custom, with Djinn jinxes).
+Scripts: Trouble Brewing, Bad Moon Rising, Sects & Violets, and Unholier Than Thou (custom, with Djinn jinxes).
 
 ## How a game works
 
@@ -35,7 +35,8 @@ get the same notebook automatically (names, seats and deaths stay in sync).
 1. Type in the players' names in seat order, deal roles.
 2. The **Reveal** tab lists the players: hand the phone around, each taps their name, reads, taps to hide.
 
-In both modes the Storyteller runs the game from the **Grimoire** (alive/dead, marks, reminders), the **Night**
+In both modes the Storyteller runs the game from the **Grimoire** (alive/dead, marks, reminders, and tapping a role
+to change a player's character or alignment mid-game for Pit-Hag, Snake Charmer, Fang Gu, Imp star-passes…), the **Night**
 order (filtered to characters in play, with target pickers that move marks), and the **Vote** helper.
 
 Phone games expire after 12 hours. The Storyteller can refresh or close the browser and resume from the home screen.

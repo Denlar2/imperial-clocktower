@@ -6,7 +6,7 @@ export const shuffle = <T,>(a: T[], rnd: () => number = Math.random): T[] =>
   a.map((x) => [rnd(), x] as const).sort((p, q) => p[0] - q[0]).map((x) => x[1])
 
 export function blankPlayer(id: string, name: string): Player {
-  return { id, name, role: null, fakeAs: null, evil: null, dead: false, executed: false, ghost: true, poison: false, drunk: false, safe: false, mad: false, note: '', reveal: null }
+  return { id, name, role: null, fakeAs: null, evil: null, dead: false, executed: false, ghost: true, poison: false, drunk: false, safe: false, mad: false, cursed: false, twin: null, note: '', reveal: null }
 }
 
 /** Reset everything about a player except identity and role. */
@@ -36,21 +36,34 @@ export function dealRoles(S: Script, players: Player[], rnd: () => number = Math
   const [t0, o0, m, d] = COMP[n] ?? COMP[Math.min(15, Math.max(5, n))]
   const names = (type: CharType) => charsOfType(S, type).map((c) => c.name)
   const mins = shuffle(names('Minion'), rnd).slice(0, m)
+  const demons = shuffle(names('Demon'), rnd).slice(0, d)
   const tfAll = shuffle(names('Townsfolk'), rnd)
   const tfSel = tfAll.slice(0, t0)
-  let mod = outsiderMod(S, [...mins, ...tfSel], rnd)
-  // Godfather with no Outsiders can only add one; never exceed the script's Outsiders.
-  if (o0 + mod < 0) mod = -mod
+  let mod = outsiderMod(S, [...mins, ...demons, ...tfSel], rnd)
+  // Removing an Outsider when there are none: Godfather (+1 or -1) must add one instead; others just get 0.
+  if (o0 + mod < 0) mod = S.id === 'BMR' ? -mod : -o0
   const o = Math.min(names('Outsider').length, o0 + mod)
   const t = t0 - (o - o0)
   // Shrink or grow the Townsfolk list without dropping the character that caused the change.
   while (tfSel.length > t) tfSel.splice(tfSel.findIndex((r) => r !== 'Balloonist' && r !== 'Baron'), 1)
   for (const r of tfAll.slice(t0)) { if (tfSel.length >= t) break; tfSel.push(r) }
-  const roles = shuffle([...tfSel, ...shuffle(names('Outsider'), rnd).slice(0, o), ...mins, ...shuffle(names('Demon'), rnd).slice(0, d)], rnd)
+  const roles = shuffle([...tfSel, ...shuffle(names('Outsider'), rnd).slice(0, o), ...mins, ...demons], rnd)
   let P: Player[] = players.map((p, i) => ({ ...resetPlayer(p), role: roles[i] ?? null, fakeAs: null, evil: null }))
   P = seatMarionette(S, P)
   P = pickBountyHunterTarget(S, P, rnd)
+  P = pairTwins(S, P, rnd)
   return assignFakes(S, P, rnd)
+}
+
+/** Evil Twin in play: pair it with a random good player. Keeps an existing valid pairing. */
+export function pairTwins(S: Script, P: Player[], rnd: () => number = Math.random): Player[] {
+  const twin = P.find((p) => p.role === 'Evil Twin')
+  if (!twin) return P.some((p) => p.twin) ? P.map((p) => ({ ...p, twin: null })) : P
+  const current = P.find((p) => p.id === twin.twin)
+  if (current && !isEvil(S, current) && current.twin === twin.id) return P
+  const good = shuffle(P.filter((p) => p.id !== twin.id && !isEvil(S, p)), rnd)[0]
+  if (!good) return P
+  return P.map((p) => ({ ...p, twin: p.id === twin.id ? good.id : p.id === good.id ? twin.id : null }))
 }
 
 /** Marionette must sit next to the Demon. Swaps roles if needed. */
@@ -105,6 +118,9 @@ export function computeReveal(S: Script, P: Player[], i: number): Reveal | null 
   }
   if (p.evil && !roleEvil(S, p.role)) mates = 'You are evil, but you do not know who the Demon is.'
   if (p.fakeAs && getChar(S, p.role)?.fake === 'Demon') mates = 'Your Minions will be shown to you tonight.'
+  const twin = p.twin ? P.find((q) => q.id === p.twin) : undefined
+  if (twin && p.role === 'Evil Twin') mates += `${mates ? ' ' : ''}Your good twin is ${twin.name}, the ${twin.role}. Good cannot win while you both live.`
+  else if (twin) mates = `You are twinned with ${twin.name}, the Evil Twin. Good cannot win while you both live; if you are executed, evil wins.`
   return { shown, type: c.type, evil, mates }
 }
 
@@ -121,7 +137,7 @@ export function nextPhase(S: Script, g: Game): Game {
   const phase = g.phase + 1
   let players = g.players
   if (phase % 2) {
-    players = players.map((p) => ({ ...p, safe: false, mad: false, ...(S.id !== 'BMR' ? { poison: false, drunk: false } : {}) }))
+    players = players.map((p) => ({ ...p, safe: false, mad: false, cursed: false, ...(S.id !== 'BMR' ? { poison: false, drunk: false } : {}) }))
   }
   return { ...g, phase, done: {}, players, votes: [] }
 }
@@ -156,7 +172,7 @@ export interface NightRow {
   pickLabel: string
 }
 
-const flags = (p: Player) => (p.dead ? ' (dead)' : '') + (p.poison ? ' (poisoned)' : '') + (p.drunk ? ' (drunk)' : '')
+const flags = (p: Player) => (p.dead ? ' (dead)' : '') + (p.poison ? ' (poisoned)' : '') + (p.drunk ? ' (drunk)' : '') + (p.cursed ? ' (cursed)' : '')
 
 export function nightRows(S: Script, g: Game, first: boolean): NightRow[] {
   const P = g.players
