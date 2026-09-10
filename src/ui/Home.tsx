@@ -46,6 +46,10 @@ export default function Home() {
         <Button big onClick={() => navigate('/join')} disabled={!configured}>
           Join a game
         </Button>
+        <Button big onClick={() => navigate('/notes')}>
+          Notetaking
+        </Button>
+        <p className="-mt-1 text-center text-sm text-dim">Private notes for any game, also with the physical game.</p>
       </div>
       <h2 className="mt-12 mb-2 text-xl text-candle">Character sheets</h2>
       <div className="flex flex-col gap-2">

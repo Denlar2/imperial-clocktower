@@ -20,8 +20,16 @@ The Storyteller taps **Run a game**, picks a script and player count, then choos
 2. Storyteller drags seats to match the circle, taps **Deal roles** (or picks roles per player), then **Start game**.
 3. Every player gets a full-screen role token on their phone: tap to reveal, tap to hide.
    The role is only available until the Storyteller begins the first night — remember it, like handing back a token.
-4. After that a player's phone shows day/night, whether they are alive, their ghost vote, private **notes**
-   per player (stored only on their phone), and the character sheet. Nobody else's role is ever sent to a player.
+4. After that a player's phone turns into their private **notebook** (see below) with day/night and alive/dead
+   status. Nobody else's role is ever sent to a player.
+
+**Notetaking** (from the home screen, no game needed — also for the physical game)
+A private notebook: pick the script, type the names in seat order, say which seat is you. Then per player:
+alignment guess, what they claim, what you think they could really be, notes, and their voting history.
+Per day: night deaths, nominations with who voted and who was executed. A **Roles** tab shows every character
+with who claims it, double claims, claim counts vs. the set-up table, and your confirmed / ruled-out marks.
+A **You** tab holds your character, what you learned each night, and general notes. Player phones in a live game
+get the same notebook automatically (names, seats and deaths stay in sync).
 
 **Single phone, pass it around** (no internet needed)
 1. Type in the players' names in seat order, deal roles.
@@ -106,7 +114,8 @@ src/game/types.ts        Game / Player / PlayerView shapes
 src/lib/store.ts         backend adapter (Supabase); store.local.ts is the no-server version
 src/lib/useStGame.ts     Storyteller state hook: local-first, debounced writes, merges joins
 src/lib/usePlayerView.ts player state hook: poke + poll refresh, auto-rejoin
-src/ui/                  screens: Home, StCreate, Lobby, Grimoire, Night, Vote, More, Join, PlayerScreen, Sheet
+src/ui/                  screens: Home, StCreate, Lobby, Grimoire, Night, Vote, Reveal, More, Join, PlayerScreen, Sheet
+src/notes/, src/ui/notes/ the notebook: model + tests, setup wizard, Players / Days / Roles / You tabs
 supabase/schema.sql      table + RPC functions
 docs/                    original build brief and the single-file reference implementation
 ```

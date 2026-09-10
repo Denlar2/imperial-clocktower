@@ -4,7 +4,9 @@ import { phaseName } from '../game/logic'
 import { PLAYER_KEY, deviceId, getLocal, setLocal, type Remembered } from '../lib/device'
 import { navigate } from '../lib/router'
 import { usePlayerView } from '../lib/usePlayerView'
-import Notes from './Notes'
+import { newNotebook, syncPlayers } from '../notes/model'
+import { useNotebook } from '../notes/useNotebook'
+import Notebook from './notes/Notebook'
 import RoleReveal from './RoleReveal'
 import { Banner, Button, Card, Empty, Footer, Page, cx } from './kit'
 
@@ -12,6 +14,14 @@ export default function PlayerScreen({ code }: { code: string }) {
   const id = deviceId()
   const remembered = getLocal<Remembered>(PLAYER_KEY)
   const { view, error, loading, gone, refresh } = usePlayerView(code, id, remembered?.code === code ? remembered.name : undefined)
+  const [nb, setNb] = useNotebook(`game-${code}`, () => newNotebook(`game-${code}`, 'TB', { synced: true, ready: true }))
+  // Keep the notebook's players in step with the live game (names, seats, deaths); notes are kept.
+  useEffect(() => {
+    if (view?.me) {
+      const shown = view.me.reveal?.shown
+      setNb((n) => syncPlayers({ ...n, script: view.script, myRole: shown && !n.myRole ? shown : n.myRole }, view.players, id))
+    }
+  }, [view, id, setNb])
   const [showRole, setShowRole] = useState(false)
   const [seenReveal, setSeenReveal] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
@@ -65,6 +75,17 @@ export default function PlayerScreen({ code }: { code: string }) {
   }
 
   const alive = !me.dead
+  if (view.status === 'playing' && !before && nb) {
+    return (
+      <Notebook
+        nb={nb}
+        setNb={setNb}
+        title={phaseName(view.phase)}
+        right={<span className={cx('display text-xl', alive ? 'text-wax' : 'text-evil')}><span>{alive ? 'Alive' : 'Dead'}</span>{!alive && <span className="ml-1 text-xs text-dim">{me.ghost ? '👻' : 'no vote'}</span>}</span>}
+        header={error ? <Banner>{error}</Banner> : undefined}
+      />
+    )
+  }
   return (
     <Page title={S?.name ?? 'Clocktower'} right={<span className="text-sm text-dim">code {code}</span>}>
       {error && <Banner>{error}</Banner>}
@@ -95,18 +116,7 @@ export default function PlayerScreen({ code }: { code: string }) {
             Show my role
           </Button>
         </>
-      ) : (
-        <>
-          <div className="flex items-center justify-between">
-            <div className="display text-3xl text-candle">{phaseName(view.phase)}</div>
-            <div className={cx('display text-2xl', alive ? 'text-wax' : 'text-evil')}>
-              <span>{alive ? 'Alive' : 'Dead'}</span>
-              {!alive && <span className="ml-2 text-sm text-dim">{me.ghost ? '👻 vote left' : 'no vote left'}</span>}
-            </div>
-          </div>
-          <Notes view={view} myId={id} />
-        </>
-      )}
+      ) : null}
       <Button className="mt-6 w-full" onClick={() => navigate(`/sheet/${view.script}`)}>Character sheet</Button>
       <Button variant="ghost" className="mt-2 w-full" onClick={() => void refresh()}>Refresh</Button>
       <Footer />

@@ -5,6 +5,7 @@ import StGame, { SoloGame } from './ui/StGame'
 import Join from './ui/Join'
 import PlayerScreen from './ui/PlayerScreen'
 import Sheet from './ui/Sheet'
+import NotesHome from './ui/NotesHome'
 
 export default function App() {
   const path = usePath()
@@ -15,5 +16,6 @@ export default function App() {
   if (seg[0] === 'join') return <Join code={seg[1]} />
   if (seg[0] === 'p' && seg[1]) return <PlayerScreen code={seg[1]} />
   if (seg[0] === 'sheet') return <Sheet scriptId={seg[1]} />
+  if (seg[0] === 'notes') return <NotesHome id={seg[1]} />
   return <Home />
 }
